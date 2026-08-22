@@ -1,0 +1,791 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Space Maintainer Log</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;700&family=Inter:wght@300;400;500;600;700&display=swap');
+
+:root{
+  --ink:#2C2C35; --ink-mid:#3E3E4A; --slate:#6B6B7A; --muted:#9E9EAD;
+  --border:#E6E6EC; --bg:#F8F8FA; --white:#FFFFFF;
+  --teal:#3D7A72; --teal-light:#EAF4F2; --teal-mid:#5A9E96;
+  --rose:#BE123C; --rose-light:#F5EAEC; --rose-mid:#E03060;
+  --amber:#8A6B3A; --amber-light:#F7F0E4; --amber-mid:#B8924A;
+  --violet:#6B5C8A; --violet-light:#F0EDF7;
+  --sky:#3A6A8A; --sky-light:#E8F1F7;
+  --shadow-xs:0 1px 3px rgba(44,44,53,.05);
+  --shadow-sm:0 2px 8px rgba(44,44,53,.07);
+  --shadow-md:0 4px 20px rgba(44,44,53,.08);
+  --shadow-lg:0 12px 40px rgba(44,44,53,.12);
+  --r:14px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--ink);min-height:100vh}
+.hidden{display:none!important}
+
+/* ══ HEADER ══ */
+header{
+  background:#3A3A45;padding:0 32px;height:62px;display:flex;align-items:center;
+  justify-content:space-between;position:sticky;top:0;z-index:200;
+  box-shadow:0 1px 0 rgba(255,255,255,.04),var(--shadow-md);
+}
+.header-left{display:flex;align-items:center;gap:18px}
+.logo{display:flex;align-items:center;gap:10px}
+.logo-mark{
+  width:32px;height:32px;border-radius:9px;
+  background:linear-gradient(135deg,var(--teal-mid),var(--teal));
+  display:flex;align-items:center;justify-content:center;font-size:.95rem;
+  box-shadow:0 2px 8px rgba(61,122,114,.4);
+}
+.logo-text{font-family:'Playfair Display',serif;font-size:1.05rem;color:#fff}
+.logo-text span{color:var(--teal-mid)}
+.header-sep{width:1px;height:24px;background:rgba(255,255,255,.1)}
+.header-date{font-size:.72rem;color:rgba(255,255,255,.4);font-weight:300;letter-spacing:.02em}
+.header-right{display:flex;align-items:center;gap:8px}
+.hbtn{
+  border:none;cursor:pointer;border-radius:9px;font-family:'Inter',sans-serif;
+  font-weight:500;font-size:.78rem;padding:8px 15px;transition:all .15s;
+  display:flex;align-items:center;gap:6px;
+}
+.hbtn-ghost{background:rgba(255,255,255,.07);color:rgba(255,255,255,.75);border:1px solid rgba(255,255,255,.1)}
+.hbtn-ghost:hover{background:rgba(255,255,255,.12);color:#fff}
+.hbtn-teal{background:var(--teal);color:#fff;box-shadow:0 2px 8px rgba(61,122,114,.3)}
+.hbtn-teal:hover{background:var(--teal-mid)}
+.sync-pill{
+  display:flex;align-items:center;gap:5px;padding:6px 12px;border-radius:20px;
+  background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.08);
+  font-size:.7rem;color:rgba(255,255,255,.5);letter-spacing:.02em;
+}
+.sync-dot{width:6px;height:6px;border-radius:50%;background:#34d399}
+.sync-dot.syncing{background:var(--amber-mid);animation:pulse-dot .8s infinite}
+.sync-dot.error{background:var(--rose-mid)}
+@keyframes pulse-dot{0%,100%{opacity:1}50%{opacity:.3}}
+
+/* ══ TABS ══ */
+.tab-nav{
+  display:flex;align-items:center;gap:8px;background:#fff;padding:10px 28px;
+  position:sticky;top:62px;z-index:90;border-bottom:1px solid var(--border);
+  box-shadow:0 2px 8px rgba(0,0,0,.04);
+}
+.tab-btn{
+  display:flex;align-items:center;gap:7px;padding:9px 20px;border-radius:99px;
+  border:2px solid var(--border);background:#fff;font-family:'Inter',sans-serif;
+  font-size:.82rem;font-weight:600;color:var(--muted);cursor:pointer;
+  transition:all .18s;white-space:nowrap;
+}
+.tab-btn:hover{border-color:var(--teal);color:var(--teal);background:var(--teal-light)}
+.tab-btn.active{background:var(--teal);color:#fff;border-color:var(--teal);box-shadow:0 2px 8px rgba(61,122,114,.25)}
+.tab-btn#tab-done.active{background:var(--violet);border-color:var(--violet);box-shadow:0 2px 8px rgba(107,92,138,.25)}
+.tab-btn#tab-done:hover:not(.active){border-color:var(--violet);color:var(--violet);background:var(--violet-light)}
+.tab-badge{
+  background:rgba(255,255,255,.25);color:#fff;font-size:.65rem;font-weight:700;
+  padding:2px 7px;border-radius:99px;min-width:18px;text-align:center;
+}
+.tab-btn:not(.active) .tab-badge{background:var(--muted);color:#fff}
+.tab-btn#tab-done:not(.active) .tab-badge{background:var(--violet)}
+
+/* ══ MAIN ══ */
+.main{max-width:1060px;margin:0 auto;padding:28px 22px 80px}
+
+/* ══ STATS ══ */
+.stats-row{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px}
+.stat-card{
+  background:var(--white);border-radius:11px;padding:18px 20px;
+  box-shadow:var(--shadow-xs);border:1px solid var(--border);cursor:pointer;
+  transition:transform .15s,box-shadow .15s;position:relative;overflow:hidden;
+}
+.stat-card::after{content:'';position:absolute;bottom:0;left:0;right:0;height:3px;border-radius:0 0 11px 11px}
+.stat-card:hover{transform:translateY(-1px);box-shadow:var(--shadow-sm)}
+.stat-card.active-filter{border-color:var(--ink);box-shadow:var(--shadow-sm)}
+.stat-card.c-lab::after{background:#38bdf8}
+.stat-card.c-back::after{background:var(--amber-mid)}
+.stat-card.c-late::after{background:var(--rose-mid)}
+.stat-label{font-size:.65rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:8px;font-weight:600}
+.stat-value{font-size:2.4rem;font-weight:300;line-height:1;letter-spacing:-.02em}
+.c-lab .stat-value{color:var(--sky)}
+.c-back .stat-value{color:var(--amber)}
+.c-late .stat-value{color:var(--rose)}
+.stat-sub{font-size:.7rem;color:var(--muted);margin-top:4px}
+
+/* ══ CONTROLS ══ */
+.controls{display:flex;align-items:center;gap:6px;margin-bottom:14px;flex-wrap:wrap}
+.filter-btn{
+  padding:7px 14px;border-radius:20px;border:1.5px solid var(--border);background:#fff;
+  font-family:'Inter',sans-serif;font-size:.77rem;font-weight:500;cursor:pointer;
+  color:var(--muted);transition:all .15s;
+}
+.filter-btn.active{background:var(--ink);color:#fff;border-color:var(--ink)}
+.filter-btn:hover:not(.active){border-color:var(--teal);color:var(--teal)}
+.search-box{
+  margin-left:auto;padding:7px 14px;border:1.5px solid var(--border);border-radius:20px;
+  font-family:'Inter',sans-serif;font-size:.8rem;outline:none;width:200px;background:#fff;
+  transition:border-color .18s;color:var(--ink);
+}
+.search-box:focus{border-color:var(--teal)}
+
+/* ══ CASE CARDS ══ */
+.case-list{display:flex;flex-direction:column;gap:8px}
+.case-card{
+  background:var(--white);border-radius:var(--r);box-shadow:var(--shadow-xs);
+  border:1px solid var(--border);border-left:4px solid transparent;
+  transition:box-shadow .18s,border-color .18s;animation:cardIn .22s ease both;overflow:hidden;
+}
+@keyframes cardIn{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:none}}
+.case-card:hover{box-shadow:var(--shadow-sm)}
+.case-card.s-lab{border-left-color:#38bdf8}
+.case-card.s-back{border-left-color:var(--amber-mid)}
+.case-card.s-warn{border-left-color:#f59e0b;background:linear-gradient(90deg,var(--amber-light),#fff 60%)}
+.case-card.s-late{border-left-color:var(--rose-mid);background:linear-gradient(90deg,var(--rose-light),#fff 60%)}
+.case-card.s-done{border-left-color:var(--teal)}
+
+.card-main{padding:15px 18px;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.pt-name{font-weight:700;font-size:.98rem;color:var(--ink);min-width:150px}
+.pt-meta{font-size:.75rem;color:var(--muted)}
+
+.badge{
+  font-size:.6rem;font-weight:700;padding:3px 9px;border-radius:20px;
+  text-transform:uppercase;letter-spacing:.07em;white-space:nowrap;
+}
+.b-appliance{background:var(--violet-light);color:var(--violet);border:1px solid #d8d0e8}
+.b-doctor{background:var(--sky-light);color:var(--sky);border:1px solid #c9dced}
+
+.status-chip{
+  font-size:.68rem;font-weight:700;padding:4px 11px;border-radius:20px;
+  letter-spacing:.03em;white-space:nowrap;
+}
+.chip-lab{background:var(--sky-light);color:var(--sky)}
+.chip-back{background:var(--amber-light);color:var(--amber)}
+.chip-warn{background:#f59e0b;color:#fff}
+.chip-late{background:var(--rose);color:#fff}
+.chip-done{background:var(--teal-light);color:var(--teal)}
+
+/* Steps */
+.steps{display:flex;gap:4px;align-items:center;margin-left:auto}
+.step{display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer}
+.step-dot{
+  width:34px;height:34px;border-radius:50%;border:2px solid var(--border);background:var(--bg);
+  display:flex;align-items:center;justify-content:center;font-size:.62rem;font-weight:700;
+  color:var(--muted);transition:all .15s;user-select:none;
+}
+.step-dot:hover{border-color:var(--teal);transform:scale(1.1)}
+.step-dot.done{background:var(--teal);border-color:var(--teal);color:#fff}
+.step-dot.next{
+  background:var(--amber-light);border-color:var(--amber-mid);color:var(--amber);
+  animation:ring 2.5s infinite;
+}
+.step-dot.urgent{background:var(--rose-light);border-color:var(--rose-mid);color:var(--rose)}
+@keyframes ring{0%,100%{box-shadow:0 0 0 0 rgba(245,158,11,.35)}50%{box-shadow:0 0 0 7px rgba(245,158,11,0)}}
+.step-label{font-size:.55rem;color:var(--muted);font-weight:600;text-align:center;line-height:1.3}
+.step-conn{width:16px;height:2px;background:var(--border);margin-bottom:14px;flex-shrink:0}
+.step-conn.done{background:var(--teal)}
+
+.card-bottom{
+  padding:10px 18px 12px;border-top:1px solid var(--border);background:#FAFAFE;
+  display:flex;align-items:center;gap:8px;flex-wrap:wrap;
+}
+.btn-act{
+  padding:7px 16px;border-radius:9px;border:1.5px solid var(--teal);
+  background:var(--teal);color:#fff;font-family:'Inter',sans-serif;font-size:.78rem;
+  font-weight:600;cursor:pointer;transition:all .15s;
+}
+.btn-act:hover{background:var(--teal-mid);border-color:var(--teal-mid)}
+.btn-act.amber{background:var(--amber-mid);border-color:var(--amber-mid);box-shadow:0 2px 8px rgba(184,146,74,.25)}
+.btn-act.amber:hover{background:#a37f3d}
+.btn-alt{
+  padding:6px 13px;border-radius:8px;border:1.5px solid var(--border);background:#fff;
+  font-family:'Inter',sans-serif;font-size:.74rem;font-weight:500;cursor:pointer;
+  color:var(--muted);transition:all .15s;
+}
+.btn-alt:hover{border-color:var(--ink);color:var(--ink)}
+.card-actions{display:flex;gap:6px;margin-left:auto}
+.btn-dismiss{
+  background:none;border:none;color:var(--muted);cursor:pointer;font-size:.85rem;
+  padding:5px 9px;border-radius:6px;transition:all .15s;
+}
+.btn-dismiss:hover{background:var(--rose-light);color:var(--rose)}
+.notes-display{font-size:.76rem;color:var(--slate);font-style:italic;padding:0 18px 12px}
+
+.empty-state{text-align:center;padding:56px 20px;color:var(--muted)}
+.empty-icon{font-size:2.2rem;margin-bottom:10px;opacity:.5}
+.empty-state p{font-size:.87rem;margin-top:6px}
+
+/* ══ MODALS ══ */
+.modal-overlay{
+  position:fixed;inset:0;background:rgba(26,26,46,.6);backdrop-filter:blur(4px);
+  display:flex;align-items:center;justify-content:center;z-index:500;
+  animation:fadeIn .18s;padding:20px;overflow-y:auto;
+}
+.modal-overlay.hidden{display:none}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes popUp{from{opacity:0;transform:scale(.93) translateY(8px)}to{opacity:1;transform:none}}
+.add-modal{
+  background:#fff;border-radius:18px;width:520px;max-width:96vw;
+  box-shadow:var(--shadow-lg);position:relative;overflow:hidden;
+  animation:popUp .22s cubic-bezier(.34,1.56,.64,1);
+}
+.add-modal-header{background:linear-gradient(120deg,#3A3A45 0%,#2C2C35 100%);padding:22px 28px 18px;position:relative}
+.add-modal-tag{font-size:.6rem;font-weight:700;text-transform:uppercase;letter-spacing:.12em;color:rgba(255,255,255,.5);margin-bottom:5px}
+.add-modal-title{font-family:'Playfair Display',serif;font-size:1.35rem;color:#fff}
+.add-modal-body{padding:24px 28px}
+.fields{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.field{display:flex;flex-direction:column}
+.field.full{grid-column:1/-1}
+.field label{font-size:.63rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin-bottom:5px}
+.field input,.field select,.field textarea{
+  width:100%;padding:10px 13px;border:1.5px solid var(--border);border-radius:9px;
+  font-family:'Inter',sans-serif;font-size:.9rem;background:var(--bg);color:var(--ink);
+  outline:none;transition:all .18s;
+}
+.field textarea{resize:vertical;min-height:60px}
+.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--teal);background:#fff;box-shadow:0 0 0 3px rgba(61,122,114,.08)}
+.field input.required-error{border-color:var(--rose)}
+.modal-actions{display:flex;gap:10px;margin-top:22px}
+.btn-cancel{
+  flex:1;background:var(--bg);border:1.5px solid var(--border);color:var(--muted);
+  padding:12px;border-radius:10px;font-family:'Inter',sans-serif;font-size:.86rem;
+  font-weight:500;cursor:pointer;transition:all .15s;
+}
+.btn-cancel:hover{border-color:var(--muted);color:var(--ink)}
+.btn-save{
+  flex:2;background:var(--teal);color:#fff;border:none;padding:12px;border-radius:10px;
+  font-family:'Inter',sans-serif;font-size:.9rem;font-weight:700;cursor:pointer;
+  transition:background .15s;box-shadow:0 4px 12px rgba(61,122,114,.3);
+}
+.btn-save:hover{background:var(--teal-mid)}
+.btn-save[disabled]{opacity:.6;cursor:default}
+.modal-close{
+  position:absolute;top:12px;right:14px;background:rgba(255,255,255,.15);border:none;
+  color:#fff;font-size:1rem;cursor:pointer;width:28px;height:28px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;transition:background .15s;z-index:10;
+}
+.modal-close:hover{background:rgba(255,255,255,.25)}
+.edit-hint{font-size:.72rem;color:var(--muted);margin-top:14px;padding:10px 13px;background:var(--bg);border-radius:8px;line-height:1.5}
+
+/* ══ GATE ══ */
+.gate{
+  position:fixed;inset:0;background:linear-gradient(135deg,#3D7A72,#5A9E96);
+  display:flex;align-items:center;justify-content:center;z-index:9999;padding:20px;
+}
+.gate-box{background:#fff;border-radius:20px;padding:40px 36px;width:370px;max-width:100%;box-shadow:0 24px 60px rgba(0,0,0,.2);text-align:center}
+.gate-icon{font-size:2.4rem;margin-bottom:12px}
+.gate-title{font-family:'Playfair Display',serif;font-size:1.4rem;color:var(--ink);margin-bottom:4px}
+.gate-sub{font-size:.78rem;color:var(--muted);margin-bottom:26px}
+.gate-box input{
+  width:100%;padding:12px 16px;border:1.5px solid var(--border);border-radius:10px;
+  font-family:'Inter',sans-serif;font-size:.95rem;outline:none;margin-bottom:10px;
+  background:var(--bg);color:var(--ink);
+}
+.gate-box input:focus{border-color:var(--teal);background:#fff}
+.gate-box input.key{font-size:.72rem;font-family:ui-monospace,Menlo,monospace}
+.gate-err{color:var(--rose);font-size:.78rem;min-height:18px;margin-bottom:8px;text-align:left}
+.gate-btn{
+  width:100%;padding:12px;background:linear-gradient(135deg,#3D7A72,#5A9E96);color:#fff;
+  border:none;border-radius:10px;font-family:'Inter',sans-serif;font-size:.95rem;
+  font-weight:600;cursor:pointer;
+}
+.gate-check{display:flex;align-items:center;gap:8px;font-size:.76rem;color:var(--muted);margin-bottom:16px;text-align:left}
+.gate-check input{width:auto;margin:0}
+
+@media (max-width:760px){
+  header{padding:0 16px;height:auto;flex-wrap:wrap;gap:10px;padding-top:12px;padding-bottom:12px}
+  .tab-nav{top:auto;position:static;padding:10px 16px;overflow-x:auto}
+  .stats-row{grid-template-columns:1fr}
+  .fields{grid-template-columns:1fr}
+  .steps{margin-left:0;width:100%;justify-content:flex-start;margin-top:6px}
+  .card-actions{margin-left:0}
+}
+</style>
+</head>
+<body>
+
+<!-- ══ GATE ══ -->
+<div class="gate" id="gate">
+  <div class="gate-box">
+    <div class="gate-icon">🦷</div>
+    <div class="gate-title">Space Maintainer Log</div>
+    <div class="gate-sub">Acorn Pediatric Dental · Staff Only</div>
+    <div class="field hidden" id="keyField" style="text-align:left;margin-bottom:10px">
+      <label style="font-size:.6rem">Supabase anon key</label>
+      <input id="g_key" class="key" placeholder="sb_publishable_...">
+    </div>
+    <input type="password" id="g_pass" placeholder="Office passphrase" onkeydown="if(event.key==='Enter')unlock()">
+    <div class="gate-err" id="gateErr"></div>
+    <label class="gate-check"><input type="checkbox" id="g_remember" checked> Remember on this device</label>
+    <button class="gate-btn" id="unlockBtn" onclick="unlock()">Sign In</button>
+  </div>
+</div>
+
+<!-- ══ APP ══ -->
+<div id="app" class="hidden">
+
+<header>
+  <div class="header-left">
+    <div class="logo">
+      <div class="logo-mark">🦷</div>
+      <div class="logo-text">Space <span>Maintainers</span></div>
+    </div>
+    <div class="header-sep"></div>
+    <div class="header-date" id="todayBadge"></div>
+  </div>
+  <div class="header-right">
+    <button class="hbtn hbtn-ghost" onclick="exportCSV()">⬇ Export CSV</button>
+    <button class="hbtn hbtn-teal" onclick="openAdd()">+ New Case</button>
+    <div class="sync-pill"><div class="sync-dot" id="syncDot"></div><span id="syncLabel">Synced</span></div>
+  </div>
+</header>
+
+<div class="tab-nav">
+  <button class="tab-btn active" id="tab-active" onclick="switchTab('active')">
+    Active <span class="tab-badge hidden" id="activeBadge">0</span>
+  </button>
+  <button class="tab-btn" id="tab-done" onclick="switchTab('done')">
+    ✅ Completed <span class="tab-badge hidden" id="doneBadge">0</span>
+  </button>
+</div>
+
+<!-- ACTIVE PANEL -->
+<div class="main" id="activePanel">
+  <div class="stats-row">
+    <div class="stat-card c-lab" id="sc-lab" onclick="setFilter('lab')">
+      <div class="stat-label">Waiting on Lab</div>
+      <div class="stat-value" id="statLab">—</div>
+      <div class="stat-sub">Impression taken</div>
+    </div>
+    <div class="stat-card c-back" id="sc-back" onclick="setFilter('back')">
+      <div class="stat-label">Back, Not Inserted</div>
+      <div class="stat-value" id="statBack">—</div>
+      <div class="stat-sub">Sitting in the office</div>
+    </div>
+    <div class="stat-card c-late" id="sc-late" onclick="setFilter('late')">
+      <div class="stat-label">Needs a Call</div>
+      <div class="stat-value" id="statLate">—</div>
+      <div class="stat-sub">Back 14+ days</div>
+    </div>
+  </div>
+
+  <div class="controls">
+    <button class="filter-btn active" id="fb-all" onclick="setFilter('all')">All Active</button>
+    <button class="filter-btn" id="fb-lab" onclick="setFilter('lab')">🔵 At Lab</button>
+    <button class="filter-btn" id="fb-back" onclick="setFilter('back')">🟡 Back</button>
+    <button class="filter-btn" id="fb-late" onclick="setFilter('late')">🔴 Needs a Call</button>
+    <select class="filter-btn" id="docFilter" onchange="render()" style="color:var(--ink)">
+      <option value="">All doctors</option>
+      <option>Dr. Tesoriero</option>
+      <option>Dr. Patel</option>
+    </select>
+    <input type="text" class="search-box" id="searchBox" placeholder="🔍 Search patient…" oninput="render()">
+  </div>
+
+  <div class="case-list" id="activeList">
+    <div class="empty-state"><div class="empty-icon">⏳</div><p>Loading…</p></div>
+  </div>
+</div>
+
+<!-- COMPLETED PANEL -->
+<div class="main hidden" id="donePanel">
+  <div style="margin-bottom:18px">
+    <div style="font-family:'Playfair Display',serif;font-size:1.3rem;color:var(--violet)">✅ Completed Cases</div>
+    <div style="font-size:.78rem;color:var(--muted);margin-top:3px">Every appliance that has been inserted, newest first</div>
+  </div>
+  <div class="controls">
+    <input type="text" class="search-box" id="doneSearch" placeholder="🔍 Search patient…" oninput="render()" style="margin-left:0;width:240px">
+    <div style="margin-left:auto;font-size:.76rem;color:var(--muted)" id="doneAvg"></div>
+  </div>
+  <div class="case-list" id="doneList"></div>
+</div>
+
+</div>
+
+<!-- ══ ADD / EDIT MODAL ══ -->
+<div class="modal-overlay hidden" id="addOverlay" onclick="if(event.target===this)closeAdd()">
+  <div class="add-modal">
+    <div class="add-modal-header">
+      <button class="modal-close" onclick="closeAdd()">✕</button>
+      <div class="add-modal-tag" id="addTag">🦷 New Case</div>
+      <div class="add-modal-title" id="addTitle">Log a Space Maintainer</div>
+    </div>
+    <div class="add-modal-body">
+      <div class="fields">
+        <div class="field"><label>First Name <span style="color:var(--rose)">*</span></label><input id="f_first" placeholder="Mia"></div>
+        <div class="field"><label>Last Name <span style="color:var(--rose)">*</span></label><input id="f_last" placeholder="Rodriguez"></div>
+        <div class="field"><label>Doctor</label>
+          <select id="f_doctor"><option>Dr. Tesoriero</option><option>Dr. Patel</option></select>
+        </div>
+        <div class="field"><label>Appliance</label>
+          <select id="f_appliance">
+            <option>Band and loop</option>
+            <option>Lower lingual holding arch</option>
+            <option>Nance</option>
+            <option>Distal shoe</option>
+            <option>Partial denture</option>
+          </select>
+        </div>
+        <div class="field full"><label>Impression Date</label><input type="date" id="f_imp"></div>
+        <div class="field full"><label>Notes <span style="font-weight:400;text-transform:none;letter-spacing:0">(tooth, lab, band size)</span></label><textarea id="f_notes" placeholder="e.g. #T, Dental Arts Lab, size 36"></textarea></div>
+      </div>
+      <div class="edit-hint hidden" id="editHint"></div>
+      <div class="modal-actions">
+        <button class="btn-cancel" onclick="closeAdd()">Cancel</button>
+        <button class="btn-save" id="saveBtn" onclick="saveCase()">Save Case →</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ══ CONFIG ══ */
+const SUPABASE_URL='https://flvoshqclfsspccovloo.supabase.co';
+const TABLE='space_maintainers';
+const WARN_DAYS=7, LATE_DAYS=14;
+
+let ANON_KEY=localStorage.getItem('acorn_sm_key')||'';
+let cryptoKey=null, cases=[], editingId=null, activeFilter='all', activeTab='active';
+
+/* ══ DATES ══ */
+const pad=n=>String(n).padStart(2,'0');
+function todayStr(){const d=new Date();return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate())}
+function parse(s){if(!s)return null;const p=s.split('-').map(Number);return new Date(p[0],p[1]-1,p[2])}
+function daysBetween(a,b){if(!a||!b)return null;return Math.round((parse(b)-parse(a))/86400000)}
+function fmt(s){if(!s)return '';return parse(s).toLocaleDateString('en-US',{month:'short',day:'numeric'})}
+function fullName(c){return ((c.first||'')+' '+(c.last||'')).trim()||'Unnamed patient'}
+
+/* ══ CRYPTO ══ */
+const SALT=new TextEncoder().encode('acorn-space-maintainer-v1');
+async function deriveKey(pass){
+  const base=await crypto.subtle.importKey('raw',new TextEncoder().encode(pass),'PBKDF2',false,['deriveKey']);
+  return crypto.subtle.deriveKey({name:'PBKDF2',salt:SALT,iterations:200000,hash:'SHA-256'},base,{name:'AES-GCM',length:256},false,['encrypt','decrypt']);
+}
+const b64=b=>btoa(String.fromCharCode.apply(null,new Uint8Array(b)));
+const unb64=s=>Uint8Array.from(atob(s),c=>c.charCodeAt(0));
+async function encrypt(obj){
+  const iv=crypto.getRandomValues(new Uint8Array(12));
+  const ct=await crypto.subtle.encrypt({name:'AES-GCM',iv},cryptoKey,new TextEncoder().encode(JSON.stringify(obj)));
+  return b64(iv)+'.'+b64(ct);
+}
+async function decrypt(blob){
+  const p=blob.split('.');
+  const pt=await crypto.subtle.decrypt({name:'AES-GCM',iv:unb64(p[0])},cryptoKey,unb64(p[1]));
+  return JSON.parse(new TextDecoder().decode(pt));
+}
+
+/* ══ SYNC ══ */
+function setSync(state,label){
+  document.getElementById('syncDot').className='sync-dot'+(state==='syncing'?' syncing':state==='error'?' error':'');
+  document.getElementById('syncLabel').textContent=label;
+}
+async function api(path,opts){
+  opts=opts||{};
+  const res=await fetch(SUPABASE_URL+'/rest/v1/'+path,{
+    method:opts.method||'GET',
+    headers:{'apikey':ANON_KEY,'Authorization':'Bearer '+ANON_KEY,'Content-Type':'application/json','Prefer':opts.prefer||'return=representation'},
+    body:opts.body?JSON.stringify(opts.body):undefined
+  });
+  if(!res.ok)throw new Error(await res.text()||('HTTP '+res.status));
+  const t=await res.text();
+  return t?JSON.parse(t):null;
+}
+function toRow(c,enc){
+  return {enc,doctor:c.doctor||null,appliance:c.appliance||null,impression_date:c.impressionDate,
+    received_date:c.receivedDate||null,inserted_date:c.seatedDate||null,updated_at:new Date().toISOString()};
+}
+async function fetchAll(){
+  const rows=await api(TABLE+'?select=*&order=impression_date.desc');
+  const out=[];
+  for(const r of rows){
+    let d={};
+    try{d=await decrypt(r.enc)}catch(e){d={first:'[locked',last:'record]',notes:''}}
+    out.push({id:r.id,first:d.first,last:d.last,notes:d.notes,doctor:r.doctor,appliance:r.appliance,
+      impressionDate:r.impression_date,receivedDate:r.received_date,seatedDate:r.inserted_date,createdAt:r.created_at});
+  }
+  return out;
+}
+
+/* ══ GATE ══ */
+function gateErr(m){document.getElementById('gateErr').textContent=m}
+function initGate(){
+  if(!ANON_KEY)document.getElementById('keyField').classList.remove('hidden');
+  const saved=localStorage.getItem('acorn_sm_pass');
+  if(saved){document.getElementById('g_pass').value=saved;unlock()}
+  else setTimeout(()=>document.getElementById(ANON_KEY?'g_pass':'g_key').focus(),100);
+}
+async function unlock(){
+  gateErr('');
+  const btn=document.getElementById('unlockBtn');
+  const keyIn=document.getElementById('g_key').value.trim();
+  const pass=document.getElementById('g_pass').value;
+  if(keyIn)ANON_KEY=keyIn;
+  if(!ANON_KEY){gateErr('Paste the Supabase anon key.');return}
+  if(!pass){gateErr('Enter the office passphrase.');return}
+  btn.disabled=true;btn.textContent='Signing in…';
+  try{
+    cryptoKey=await deriveKey(pass);
+    const probe=await api(TABLE+'?select=enc&limit=1');
+    if(probe.length){try{await decrypt(probe[0].enc)}catch(e){throw new Error('BADPASS')}}
+    if(document.getElementById('g_remember').checked){
+      localStorage.setItem('acorn_sm_key',ANON_KEY);
+      localStorage.setItem('acorn_sm_pass',pass);
+    }
+    cases=await fetchAll();
+    document.getElementById('gate').classList.add('hidden');
+    document.getElementById('app').classList.remove('hidden');
+    document.getElementById('todayBadge').textContent=new Date().toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'});
+    setSync('ok','Synced ✓');
+    render();
+  }catch(e){
+    cryptoKey=null;
+    gateErr(e.message==='BADPASS'?'That passphrase does not match the existing records.':'Could not reach the database. Check the key and your connection.');
+  }finally{btn.disabled=false;btn.textContent='Sign In'}
+}
+
+/* ══ MODEL ══ */
+function stageOf(c){
+  if(c.seatedDate)return 'done';
+  if(c.receivedDate)return 'back';
+  return 'lab';
+}
+function daysBack(c){return c.receivedDate&&!c.seatedDate?daysBetween(c.receivedDate,todayStr()):null}
+function severity(c){
+  const s=stageOf(c);
+  if(s==='done')return 'done';
+  if(s==='lab')return 'lab';
+  const d=daysBack(c);
+  if(d>=LATE_DAYS)return 'late';
+  if(d>=WARN_DAYS)return 'warn';
+  return 'back';
+}
+function urgency(c){
+  const s=stageOf(c);
+  if(s==='back')return -1000-(daysBack(c)||0);
+  if(s==='lab')return -(daysBetween(c.impressionDate,todayStr())||0);
+  return 9999;
+}
+
+/* ══ RENDER ══ */
+function render(){
+  const activeCases=cases.filter(c=>stageOf(c)!=='done');
+  const doneCases=cases.filter(c=>stageOf(c)==='done');
+
+  const nLab=activeCases.filter(c=>stageOf(c)==='lab').length;
+  const nBack=activeCases.filter(c=>stageOf(c)==='back').length;
+  const nLate=activeCases.filter(c=>severity(c)==='late').length;
+  document.getElementById('statLab').textContent=nLab;
+  document.getElementById('statBack').textContent=nBack;
+  document.getElementById('statLate').textContent=nLate;
+
+  const ab=document.getElementById('activeBadge');
+  if(activeCases.length){ab.textContent=activeCases.length;ab.classList.remove('hidden')}else ab.classList.add('hidden');
+  const db=document.getElementById('doneBadge');
+  if(doneCases.length){db.textContent=doneCases.length;db.classList.remove('hidden')}else db.classList.add('hidden');
+
+  document.querySelectorAll('.stat-card').forEach(el=>el.classList.remove('active-filter'));
+  if(activeFilter!=='all')document.getElementById('sc-'+activeFilter)?.classList.add('active-filter');
+  document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('fb-'+activeFilter)?.classList.add('active');
+
+  // Active list
+  const q=document.getElementById('searchBox').value.toLowerCase();
+  const doc=document.getElementById('docFilter').value;
+  let rows=activeCases.filter(c=>{
+    if(doc&&c.doctor!==doc)return false;
+    if(q&&!(fullName(c)+' '+(c.notes||'')).toLowerCase().includes(q))return false;
+    if(activeFilter==='all')return true;
+    if(activeFilter==='late')return severity(c)==='late';
+    return stageOf(c)===activeFilter;
+  }).sort((a,b)=>urgency(a)-urgency(b));
+
+  const list=document.getElementById('activeList');
+  list.innerHTML=rows.length?rows.map(buildCard).join('')
+    :`<div class="empty-state"><div class="empty-icon">🦷</div><p>${activeCases.length===0?'No active cases. Tap <strong>+ New Case</strong> when you take an impression.':'No cases match this filter.'}</p></div>`;
+
+  // Done list
+  const dq=document.getElementById('doneSearch').value.toLowerCase();
+  const dRows=doneCases.filter(c=>!dq||(fullName(c)+' '+(c.notes||'')).toLowerCase().includes(dq))
+    .sort((a,b)=>String(b.seatedDate).localeCompare(String(a.seatedDate)));
+  document.getElementById('doneList').innerHTML=dRows.length?dRows.map(buildCard).join('')
+    :`<div class="empty-state"><div class="empty-icon">✅</div><p>${doneCases.length===0?'Nothing completed yet. Cases land here once you mark them inserted.':'No completed cases match that search.'}</p></div>`;
+
+  const lags=doneCases.map(c=>daysBetween(c.impressionDate,c.seatedDate)).filter(n=>n!=null);
+  document.getElementById('doneAvg').textContent=lags.length
+    ? `Average ${Math.round(lags.reduce((a,b)=>a+b,0)/lags.length)} days from impression to insert · ${lags.length} case${lags.length!==1?'s':''}`:'';
+}
+
+function buildCard(c){
+  const sev=severity(c), stage=stageOf(c);
+  const steps=[{l:'Impression',d:c.impressionDate},{l:'Back',d:c.receivedDate},{l:'Inserted',d:c.seatedDate}];
+  const doneCount=steps.filter(s=>s.d).length;
+
+  let chip='',action='';
+  if(stage==='lab'){
+    const age=daysBetween(c.impressionDate,todayStr());
+    chip=`<span class="status-chip chip-lab">At lab · ${age} day${age===1?'':'s'}</span>`;
+    action=`<button class="btn-act" onclick="markBack('${c.id}')">📦 Mark Back</button>
+            <button class="btn-alt" onclick="markInserted('${c.id}')">Inserted today</button>`;
+  }else if(stage==='back'){
+    const d=daysBack(c);
+    const cls=sev==='late'?'chip-late':sev==='warn'?'chip-warn':'chip-back';
+    const txt=sev==='late'?`🔴 Back ${d} days · call the family`:sev==='warn'?`⚠ Back ${d} days`:`Back ${d} day${d===1?'':'s'}`;
+    chip=`<span class="status-chip ${cls}">${txt}</span>`;
+    action=`<button class="btn-act amber" onclick="markInserted('${c.id}')">✓ Mark Inserted</button>`;
+  }else{
+    const lag=daysBetween(c.impressionDate,c.seatedDate);
+    chip=`<span class="status-chip chip-done">✅ Inserted ${fmt(c.seatedDate)}${lag!=null?` · ${lag}d total`:''}</span>`;
+  }
+
+  const stepsHTML=steps.map((s,i)=>{
+    const isDone=!!s.d;
+    const isNext=!isDone&&i===doneCount;
+    const cls=isDone?'done':isNext?(sev==='late'?'urgent':'next'):'';
+    const conn=i<2?`<div class="step-conn${steps[i].d&&steps[i+1].d?' done':''}"></div>`:'';
+    return `<div class="step" onclick="toggleStep('${c.id}',${i})" title="${isDone?'Undo':'Mark'} ${s.l}">
+      <div class="step-dot ${cls}">${isDone?'✓':i+1}</div>
+      <div class="step-label">${s.l}<br><span style="opacity:.7">${s.d?fmt(s.d):'—'}</span></div>
+    </div>${conn}`;
+  }).join('');
+
+  return `<div class="case-card s-${sev}">
+    <div class="card-main">
+      <div>
+        <div class="pt-name">${esc(fullName(c))}</div>
+        <div class="pt-meta">Impression ${fmt(c.impressionDate)}</div>
+      </div>
+      <span class="badge b-appliance">${esc(c.appliance||'')}</span>
+      <span class="badge b-doctor">${esc(c.doctor||'')}</span>
+      ${chip}
+      <div class="steps">${stepsHTML}</div>
+    </div>
+    ${c.notes?`<div class="notes-display">💬 ${esc(c.notes)}</div>`:''}
+    <div class="card-bottom">
+      ${action}
+      <div class="card-actions">
+        <button class="btn-alt" onclick="openAdd('${c.id}')">✏️ Edit</button>
+        <button class="btn-dismiss" onclick="del('${c.id}')" title="Remove">✕</button>
+      </div>
+    </div>
+  </div>`;
+}
+function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}
+
+/* ══ TABS + FILTERS ══ */
+function switchTab(t){
+  activeTab=t;
+  document.getElementById('tab-active').classList.toggle('active',t==='active');
+  document.getElementById('tab-done').classList.toggle('active',t==='done');
+  document.getElementById('activePanel').classList.toggle('hidden',t!=='active');
+  document.getElementById('donePanel').classList.toggle('hidden',t!=='done');
+}
+function setFilter(f){activeFilter=activeFilter===f&&f!=='all'?'all':f;render()}
+
+/* ══ ACTIONS ══ */
+async function patch(c,fields){
+  const prev={...c};
+  Object.assign(c,fields);
+  render();setSync('syncing','Saving…');
+  try{
+    const enc=await encrypt({first:c.first,last:c.last,notes:c.notes});
+    await api(TABLE+'?id=eq.'+c.id,{method:'PATCH',body:toRow(c,enc),prefer:'return=minimal'});
+    setSync('ok','Synced ✓');
+  }catch(e){Object.assign(c,prev);render();setSync('error','Save failed')}
+}
+function markBack(id){const c=cases.find(x=>x.id===id);if(c)patch(c,{receivedDate:todayStr()})}
+function markInserted(id){
+  const c=cases.find(x=>x.id===id);
+  if(c)patch(c,{receivedDate:c.receivedDate||todayStr(),seatedDate:todayStr()});
+}
+function toggleStep(id,i){
+  const c=cases.find(x=>x.id===id);if(!c)return;
+  if(i===0)return;
+  if(i===1)patch(c,c.receivedDate?{receivedDate:null,seatedDate:null}:{receivedDate:todayStr()});
+  if(i===2)patch(c,c.seatedDate?{seatedDate:null}:{receivedDate:c.receivedDate||todayStr(),seatedDate:todayStr()});
+}
+async function del(id){
+  const c=cases.find(x=>x.id===id);
+  if(!confirm('Remove the case for '+(c?fullName(c):'this patient')+'?'))return;
+  const keep=[...cases];
+  cases=cases.filter(x=>x.id!==id);render();setSync('syncing','Saving…');
+  try{await api(TABLE+'?id=eq.'+id,{method:'DELETE',prefer:'return=minimal'});setSync('ok','Synced ✓')}
+  catch(e){cases=keep;render();setSync('error','Delete failed')}
+}
+
+/* ══ MODAL ══ */
+function openAdd(id){
+  editingId=id||null;
+  const c=id?cases.find(x=>x.id===id):null;
+  document.getElementById('addTag').textContent=c?'✏️ Edit':'🦷 New Case';
+  document.getElementById('addTitle').textContent=c?'Edit Case':'Log a Space Maintainer';
+  document.getElementById('f_first').value=c?c.first||'':'';
+  document.getElementById('f_last').value=c?c.last||'':'';
+  document.getElementById('f_doctor').value=c?c.doctor||'Dr. Tesoriero':'Dr. Tesoriero';
+  document.getElementById('f_appliance').value=c?c.appliance||'Band and loop':'Band and loop';
+  document.getElementById('f_imp').value=c?c.impressionDate||todayStr():todayStr();
+  document.getElementById('f_notes').value=c?c.notes||'':'';
+  document.getElementById('f_first').classList.remove('required-error');
+  const hint=document.getElementById('editHint');
+  if(c&&(c.receivedDate||c.seatedDate)){
+    hint.classList.remove('hidden');
+    hint.innerHTML=`Back: <strong>${c.receivedDate?fmt(c.receivedDate):'not yet'}</strong> · Inserted: <strong>${c.seatedDate?fmt(c.seatedDate):'not yet'}</strong><br>Tap the circles on the card to change these.`;
+  }else hint.classList.add('hidden');
+  document.getElementById('addOverlay').classList.remove('hidden');
+  setTimeout(()=>document.getElementById('f_first').focus(),80);
+}
+function closeAdd(){document.getElementById('addOverlay').classList.add('hidden');editingId=null}
+
+async function saveCase(){
+  const first=document.getElementById('f_first').value.trim();
+  const last=document.getElementById('f_last').value.trim();
+  if(!first){document.getElementById('f_first').classList.add('required-error');document.getElementById('f_first').focus();return}
+  const btn=document.getElementById('saveBtn');btn.disabled=true;
+  const data={first,last,
+    doctor:document.getElementById('f_doctor').value,
+    appliance:document.getElementById('f_appliance').value,
+    impressionDate:document.getElementById('f_imp').value||todayStr(),
+    notes:document.getElementById('f_notes').value.trim()};
+  setSync('syncing','Saving…');
+  try{
+    const enc=await encrypt({first:data.first,last:data.last,notes:data.notes});
+    if(editingId){
+      const c=cases.find(x=>x.id===editingId);
+      Object.assign(c,data);
+      await api(TABLE+'?id=eq.'+c.id,{method:'PATCH',body:toRow(c,enc),prefer:'return=minimal'});
+    }else{
+      const created=await api(TABLE,{method:'POST',body:toRow({...data,receivedDate:null,seatedDate:null},enc)});
+      cases.push({id:created[0].id,createdAt:created[0].created_at,receivedDate:null,seatedDate:null,...data});
+    }
+    setSync('ok','Synced ✓');closeAdd();render();
+  }catch(e){setSync('error','Save failed');alert('Could not save. Check your connection.')}
+  finally{btn.disabled=false}
+}
+
+/* ══ EXPORT ══ */
+function exportCSV(){
+  if(!cases.length)return;
+  const head=['Last Name','First Name','Doctor','Appliance','Impression','Back','Inserted','Days to Insert','Status','Notes'];
+  const label={lab:'Waiting on lab',back:'Back, not inserted',done:'Inserted'};
+  const q=v=>'"'+String(v==null?'':v).replace(/"/g,'""')+'"';
+  const rows=cases.map(c=>[c.last,c.first,c.doctor,c.appliance,c.impressionDate,c.receivedDate,c.seatedDate,
+    c.seatedDate?daysBetween(c.impressionDate,c.seatedDate):'',label[stageOf(c)],c.notes].map(q).join(','));
+  const blob=new Blob([head.map(q).join(',')+'\n'+rows.join('\n')],{type:'text/csv'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);a.download='space-maintainers-'+todayStr()+'.csv';a.click();
+}
+
+/* ══ WIRING ══ */
+document.addEventListener('keydown',e=>{
+  if(!document.getElementById('addOverlay').classList.contains('hidden')){
+    if(e.key==='Escape')closeAdd();
+    if(e.key==='Enter'&&(e.metaKey||e.ctrlKey))saveCase();
+  }
+});
+setInterval(async()=>{
+  if(!cryptoKey)return;
+  try{cases=await fetchAll();render();setSync('ok','Synced ✓')}catch(e){}
+},8000);
+window.addEventListener('focus',async()=>{
+  if(!cryptoKey)return;
+  try{cases=await fetchAll();render()}catch(e){}
+});
+initGate();
+</script>
+</body>
+</html>
